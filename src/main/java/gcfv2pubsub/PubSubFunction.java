@@ -22,6 +22,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class PubSubFunction implements CloudEventsFunction {
   private static final Logger logger = Logger.getLogger(PubSubFunction.class.getName());
 
@@ -50,9 +54,15 @@ public class PubSubFunction implements CloudEventsFunction {
         String uname = resultSet.getString("email");
         logger.info(uname + "from database");
       }
-      String sql = "UPDATE email_verification SET status = 'sent' WHERE user_id = ?";
+      LocalDateTime currentTimestamp = LocalDateTime.now();
+      String formattedTimestamp = currentTimestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"));
+      String link = "http://skynetx.me:8080/v1/verify/" + userId;
+      String sql = "UPDATE email_verification SET status = ?, link = ? WHERE user_id = ?";
       PreparedStatement updateStmt = con.prepareStatement(sql);
-        updateStmt.setString(1, userId);
+      updateStmt.setString(1, "sent");
+      updateStmt.setString(2, link);
+      //updateStmt.setString(3, formattedTimestamp);
+      updateStmt.setString(3, userId);
         int rowsAffected = updateStmt.executeUpdate();
         System.out.println("Rows affected: " + rowsAffected);
         logger.info(String.valueOf(rowsAffected));
@@ -125,9 +135,11 @@ public class PubSubFunction implements CloudEventsFunction {
   }
   public static DataSource createConnectionPool() {
     HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(String.format("jdbc:postgresql://%s:%s/%s", "10.194.0.2", "5432", "webapp"));
+    String db_ip = System.getenv("db_ip");
+    String password = System.getenv("password");
+    hikariConfig.setJdbcUrl(String.format("jdbc:postgresql://%s:%s/%s", db_ip, "5432", "webapp"));
     hikariConfig.setUsername("webapp");
-    hikariConfig.setPassword("xjYzqv4I");
+    hikariConfig.setPassword(password);
     logger.info("DB Connected");
     return new HikariDataSource(hikariConfig);
   }
