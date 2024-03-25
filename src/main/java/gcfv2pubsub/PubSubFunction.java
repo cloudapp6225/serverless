@@ -74,4 +74,61 @@ public class PubSubFunction implements CloudEventsFunction {
     // Log the message
     logger.info("Pub/Sub message: " + decodedData);
   }
+  public static void sendEmail(Session session, String toEmail, String subject, String body){
+    try
+    {
+      MimeMessage msg = new MimeMessage(session);
+      msg.addHeader("Content-type", "text/HTML; charset=UTF-8");
+      msg.addHeader("format", "flowed");
+      msg.addHeader("Content-Transfer-Encoding", "8bit");
+      msg.setFrom(new InternetAddress("no_reply@skynetx.me", "NoReply-JD"));
+      msg.setReplyTo(InternetAddress.parse("no_reply@skynetx.me", false));
+      msg.setSubject(subject, "UTF-8");
+      msg.setText(body, "UTF-8");
+      msg.setSentDate(new Date());
+      msg.setRecipients(javax.mail.Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
+      System.out.println("Message is ready");
+      logger.info("Message is ready");
+      Transport.send(msg);
+      System.out.println("Email Sent Successfully!!");
+      logger.info("Email Sent Successfully!!");
+    }
+    catch (Exception e) {
+      logger.info(e.getMessage());
+      e.printStackTrace();
+    }
+  }
+
+  public void mailGunSMTP(String userId, String toEmail) {
+    final String fromEmail = "xxxxxxxxxxxx";
+    final String password = "XXXXXXXXX";
+    //final String toEmail = "vinay21031998@gmail.com";
+
+    System.out.println("SSLEmail Start");
+    Properties props = new Properties();
+    props.put("mail.smtp.host", "smtp.mailgun.org");
+    props.put("mail.smtp.port", "587");
+    props.put("mail.smtp.auth", "true");
+    props.put("mail.smtp.starttls.enable", "true");
+
+    Authenticator auth = new Authenticator() {
+      protected PasswordAuthentication getPasswordAuthentication() {
+        return new PasswordAuthentication(fromEmail, password);
+      }
+    };
+
+    Session session = Session.getInstance(props, auth);
+    System.out.println("Session created");
+    logger.info("Session created");
+    String body = "http://skynetx.me:8080/v1/verify/" + userId;
+    sendEmail(session, toEmail,"mail from vk Testing Subject", body);
+  }
+  public static DataSource createConnectionPool() {
+    HikariConfig hikariConfig = new HikariConfig();
+    hikariConfig.setJdbcUrl(String.format("jdbc:postgresql://%s:%s/%s", "10.194.0.2", "5432", "webapp"));
+    hikariConfig.setUsername("webapp");
+    hikariConfig.setPassword("xjYzqv4I");
+    logger.info("DB Connected");
+    return new HikariDataSource(hikariConfig);
+  }
 }
