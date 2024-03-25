@@ -63,20 +63,20 @@ public class PubSubFunction implements CloudEventsFunction {
       updateStmt.setString(2, link);
       //updateStmt.setString(3, formattedTimestamp);
       updateStmt.setString(3, userId);
-        int rowsAffected = updateStmt.executeUpdate();
-        System.out.println("Rows affected: " + rowsAffected);
-        logger.info(String.valueOf(rowsAffected));
+      int rowsAffected = updateStmt.executeUpdate();
+      System.out.println("Rows affected: " + rowsAffected);
+      logger.info(String.valueOf(rowsAffected));
     } catch (SQLException e) {
-        logger.info(e.getMessage());
-        throw new RuntimeException(e);
+      logger.info(e.getMessage());
+      throw new RuntimeException(e);
     }
     finally {
       if(con != null) {
         try {
           con.close();
         } catch (SQLException e) {
-            logger.warning("Error closing connection to database");
-            throw new RuntimeException(e);
+          logger.warning("Error closing connection to database");
+          throw new RuntimeException(e);
         }
       }
     }
@@ -84,6 +84,7 @@ public class PubSubFunction implements CloudEventsFunction {
     // Log the message
     logger.info("Pub/Sub message: " + decodedData);
   }
+
   public static void sendEmail(Session session, String toEmail, String subject, String body){
     try
     {
@@ -110,8 +111,8 @@ public class PubSubFunction implements CloudEventsFunction {
   }
 
   public void mailGunSMTP(String userId, String toEmail) {
-    final String fromEmail = "xxxxxxxxxxxx";
-    final String password = "XXXXXXXXX";
+    final String fromEmail = System.getenv("mailgun_email");
+    final String password = System.getenv("api_key");
     //final String toEmail = "vinay21031998@gmail.com";
 
     System.out.println("SSLEmail Start");
