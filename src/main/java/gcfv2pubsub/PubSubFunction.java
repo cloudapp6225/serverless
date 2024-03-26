@@ -40,10 +40,12 @@ public class PubSubFunction implements CloudEventsFunction {
     Message message = data.getMessage();
     // Get the base64-encoded data from the message & decode it
     String encodedData = message.getData();
-    Map<String, String> msgAttributes = message.getAttributes();
-    logger.info(msgAttributes.get("username"));
-    mailGunSMTP(msgAttributes.get("userId"), msgAttributes.get("username"));
-    String userId = msgAttributes.get("userId");
+    String decodedData = new String(Base64.getDecoder().decode(encodedData));
+    //Map<String, String> msgAttributes = message.getAttributes();
+    Map<String, String> jsonMap = gson.fromJson(decodedData, Map.class);
+    logger.info(jsonMap.get("uuid"));
+    mailGunSMTP(jsonMap.get("uuid"), jsonMap.get("username"));
+    String uuid = jsonMap.get("uuid");
     DataSource ds = createConnectionPool();
     Connection con = null;
     try {
@@ -56,13 +58,13 @@ public class PubSubFunction implements CloudEventsFunction {
       }
       LocalDateTime currentTimestamp = LocalDateTime.now();
       String formattedTimestamp = currentTimestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"));
-      String link = "http://skynetx.me:8080/v1/verify/" + userId;
+      String link = "http://skynetx.me:8080/v1/verify/" + uuid;
       String sql = "UPDATE email_verification SET status = ?, link = ? WHERE user_id = ?";
       PreparedStatement updateStmt = con.prepareStatement(sql);
       updateStmt.setString(1, "sent");
       updateStmt.setString(2, link);
       //updateStmt.setString(3, formattedTimestamp);
-      updateStmt.setString(3, userId);
+      updateStmt.setString(3, uuid);
       int rowsAffected = updateStmt.executeUpdate();
       System.out.println("Rows affected: " + rowsAffected);
       logger.info(String.valueOf(rowsAffected));
@@ -80,7 +82,6 @@ public class PubSubFunction implements CloudEventsFunction {
         }
       }
     }
-    String decodedData = new String(Base64.getDecoder().decode(encodedData));
     // Log the message
     logger.info("Pub/Sub message: " + decodedData);
   }
@@ -110,7 +111,7 @@ public class PubSubFunction implements CloudEventsFunction {
     }
   }
 
-  public void mailGunSMTP(String userId, String toEmail) {
+  public void mailGunSMTP(String uuid, String toEmail) {
     final String fromEmail = System.getenv("mailgun_email");
     final String password = System.getenv("api_key");
     //final String toEmail = "vinay21031998@gmail.com";
@@ -131,7 +132,7 @@ public class PubSubFunction implements CloudEventsFunction {
     Session session = Session.getInstance(props, auth);
     System.out.println("Session created");
     logger.info("Session created");
-    String body = "http://skynetx.me:8080/v1/verify/" + userId;
+    String body = "http://skynetx.me:8080/v1/verify/" + uuid;
     sendEmail(session, toEmail,"mail from vk Testing Subject", body);
   }
   public static DataSource createConnectionPool() {
