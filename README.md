@@ -1,2 +1,0 @@
-# serverless
-GCP Cloud Function
