@@ -59,12 +59,12 @@ public class PubSubFunction implements CloudEventsFunction {
       LocalDateTime currentTimestamp = LocalDateTime.now();
       String formattedTimestamp = currentTimestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"));
       String link = "http://skynetx.me:8080/v1/verify/" + uuid;
-      String sql = "UPDATE email_verification SET status = ?, link = ? WHERE user_id = ?";
+      String sql = "UPDATE email_verification SET status = ?, link = ?, sent_timestamp = ? WHERE user_id = ?";
       PreparedStatement updateStmt = con.prepareStatement(sql);
-        updateStmt.setString(1, "sent");
-        updateStmt.setString(2, link);
-        //updateStmt.setString(3, formattedTimestamp);
-        updateStmt.setString(3, uuid);
+      updateStmt.setString(1, "sent");
+      updateStmt.setString(2, link);
+      updateStmt.setString(3, formattedTimestamp);
+      updateStmt.setString(4, uuid);
         int rowsAffected = updateStmt.executeUpdate();
         System.out.println("Rows affected: " + rowsAffected);
         logger.info(String.valueOf(rowsAffected));
