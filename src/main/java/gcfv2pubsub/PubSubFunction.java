@@ -58,7 +58,7 @@ public class PubSubFunction implements CloudEventsFunction {
       }
       LocalDateTime currentTimestamp = LocalDateTime.now();
       String formattedTimestamp = currentTimestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"));
-      String link = "http://skynetx.me:8080/v1/verify/" + uuid;
+      String link = System.getenv("verification_link") + uuid;
       String sql = "UPDATE email_verification SET status = ?, link = ?, sent_timestamp = ? WHERE user_id = ?";
       PreparedStatement updateStmt = con.prepareStatement(sql);
       updateStmt.setString(1, "sent");
