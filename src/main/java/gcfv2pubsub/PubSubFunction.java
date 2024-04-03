@@ -132,7 +132,7 @@ public class PubSubFunction implements CloudEventsFunction {
     Session session = Session.getInstance(props, auth);
     System.out.println("Session created");
     logger.info("Session created");
-    String body = "http://skynetx.me:8080/v1/verify/" + uuid;
+    String body = System.getenv("verification_link") + uuid;
     sendEmail(session, toEmail,"mail from vk Testing Subject", body);
   }
   public static DataSource createConnectionPool() {
