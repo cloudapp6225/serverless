@@ -44,7 +44,8 @@ public class PubSubFunction implements CloudEventsFunction {
     //Map<String, String> msgAttributes = message.getAttributes();
     Map<String, String> jsonMap = gson.fromJson(decodedData, Map.class);
     logger.info(jsonMap.get("uuid"));
-    mailGunSMTP(jsonMap.get("uuid"), jsonMap.get("username"));
+    String mailLink = jsonMap.get("link");
+    mailGunSMTP(jsonMap.get("uuid"), jsonMap.get("username"), mailLink);
     String uuid = jsonMap.get("uuid");
     DataSource ds = createConnectionPool();
     Connection con = null;
@@ -58,27 +59,27 @@ public class PubSubFunction implements CloudEventsFunction {
       }
       LocalDateTime currentTimestamp = LocalDateTime.now();
       String formattedTimestamp = currentTimestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"));
-      String link = System.getenv("verification_link") + uuid;
+      String link = mailLink + uuid;
       String sql = "UPDATE email_verification SET status = ?, link = ?, sent_timestamp = ? WHERE user_id = ?";
       PreparedStatement updateStmt = con.prepareStatement(sql);
       updateStmt.setString(1, "sent");
       updateStmt.setString(2, link);
       updateStmt.setString(3, formattedTimestamp);
       updateStmt.setString(4, uuid);
-        int rowsAffected = updateStmt.executeUpdate();
-        System.out.println("Rows affected: " + rowsAffected);
-        logger.info(String.valueOf(rowsAffected));
+      int rowsAffected = updateStmt.executeUpdate();
+      System.out.println("Rows affected: " + rowsAffected);
+      logger.info(String.valueOf(rowsAffected));
     } catch (SQLException e) {
-        logger.info(e.getMessage());
-        throw new RuntimeException(e);
+      logger.info(e.getMessage());
+      throw new RuntimeException(e);
     }
     finally {
       if(con != null) {
         try {
           con.close();
         } catch (SQLException e) {
-            logger.warning("Error closing connection to database");
-            throw new RuntimeException(e);
+          logger.warning("Error closing connection to database");
+          throw new RuntimeException(e);
         }
       }
     }
@@ -111,7 +112,7 @@ public class PubSubFunction implements CloudEventsFunction {
     }
   }
 
-  public void mailGunSMTP(String uuid, String toEmail) {
+  public void mailGunSMTP(String uuid, String toEmail, String link) {
     final String fromEmail = System.getenv("mailgun_email");
     final String password = System.getenv("api_key");
     //final String toEmail = "vinay21031998@gmail.com";
@@ -132,7 +133,7 @@ public class PubSubFunction implements CloudEventsFunction {
     Session session = Session.getInstance(props, auth);
     System.out.println("Session created");
     logger.info("Session created");
-    String body = System.getenv("verification_link") + uuid;
+    String body = link + uuid;
     sendEmail(session, toEmail,"mail from vk Testing Subject", body);
   }
   public static DataSource createConnectionPool() {
